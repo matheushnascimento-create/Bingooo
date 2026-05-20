@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Bingo Number Tracker</title>
+    <style>
+        /* --- CSS VARIABLES & THEMES --- */
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            
+            /* Column Branding Colors */
+            --color-b: #ef4444; /* Vibrant Red */
+            --color-i: #f97316; /* Electric Orange */
+            --color-n: #10b981; /* Emerald Green */
+            --color-g: #3b82f6; /* Dodger Blue */
+            --color-o: #8b5cf6; /* Amethyst Purple */
+            
+            /* Uncalled ball state backgrounds (Light Mode) */
+            --bg-uncalled: #f8fafc;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+            --bg-uncalled: #151f32;
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- HEADER & CONTROLS --- */
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(45deg, var(--color-b), var(--color-o));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats-panel {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .counter-box {
+            background-color: var(--bg-uncalled);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .counter-box span {
+            color: var(--color-g);
+            font-size: 1.3rem;
+        }
+
+        .btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #dc2626;
+            box-shadow: 0 6px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-uncalled);
+        }
+
+        /* --- BINGO BOARD GRAPHICS --- */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        .panel-column {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-top: 6px solid var(--col-theme);
+        }
+
+        /* Mapping theme colors to columns */
+        .col-b { --col-theme: var(--color-b); }
+        .col-i { --col-theme: var(--color-i); }
+        .col-n { --col-theme: var(--color-n); }
+        .col-g { --col-theme: var(--color-g); }
+        .col-o { --col-theme: var(--color-o); }
+
+        .column-header {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--col-theme);
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--border-color);
+            letter-spacing: 1px;
+        }
+
+        .numbers-subgrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        /* --- BINGO BALLS / TRACKS --- */
+        .ball {
+            aspect-ratio: 1;
+            background-color: var(--bg-uncalled);
+            border: 2px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ball:hover {
+            transform: translateY(-2px);
+            border-color: var(--col-theme);
+            color: var(--col-theme);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Called State */
+        .ball.called {
+            background-color: var(--col-theme);
+            border-color: var(--col-theme);
+            color: #ffffff;
+            box-shadow: 0 4px 12px var(--col-theme);
+            animation: ballPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Most Recently Called State */
+        .ball.last-called {
+            animation: pulseGlow 1.5s infinite alternate, ballPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 10;
+            transform: scale(1.08);
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 4px var(--bg-card), 0 0 20px 6px var(--col-theme);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes ballPop {
+            0% { transform: scale(0.6); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1.05); filter: brightness(1); }
+            100% { transform: scale(1.12); filter: brightness(1.2); }
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 1024px) {
+            .board-grid {
+                gap: 12px;
+            }
+            .numbers-subgrid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .ball {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            header {
+                padding: 15px;
+                border-radius: 12px;
+            }
+            .board-grid {
+                grid-template-columns: 1fr; /* Stack columns vertically on mobile */
+                gap: 15px;
+            }
+            .panel-column {
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+            }
+            .column-header {
+                border-bottom: none;
+                border-right: 2px solid var(--border-color);
+                padding-bottom: 0;
+                padding-right: 15px;
+                min-width: 50px;
+                font-size: 2rem;
+            }
+            .numbers-subgrid {
+                grid-template-columns: repeat(5, 1fr); /* 5x3 horizontal matrix layout for mobile row */
+                flex-grow: 1;
+                gap: 6px;
+            }
+            .ball {
+                aspect-ratio: 1;
+                height: auto;
+                font-size: 0.95rem;
+                border-radius: 8px;
+            }
+            .ball.last-called {
+                transform: scale(1.05);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .column-header {
+                font-size: 1.6rem;
+                min-width: 35px;
+                padding-right: 8px;
+            }
+            .numbers-subgrid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            .ball {
+                font-size: 0.85rem;
+                padding: 4px 0;
+            }
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .stats-panel {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <h1>BINGO TRACKER</h1>
+            </div>
+            <div class="stats-panel">
+                <div class="counter-box">
+                    Called: <span id="call-counter">0</span> / 75
+                </div>
+                <button class="btn" id="clear-btn" onclick="clearBoard()">
+                    Reset Board
+                </button>
+                <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                    🌙
+                </button>
+            </div>
+        </header>
+
+        <main class="board-grid" id="bingo-board">
+            </main>
+    </div>
+
+    <script>
+        const boardContainer = document.getElementById('bingo-board');
+        const counterDisplay = document.getElementById('call-counter');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        
+        // Track sequencing to accurate manage "Last Called" values
+        let calledSequence = [];
+
+        // Definition rules for standard American Bingo configuration
+        const columnsConfig = [
+            { letter: 'B', start: 1, end: 15, class: 'col-b' },
+            { letter: 'I', start: 16, end: 30, class: 'col-i' },
+            { letter: 'N', start: 31, end: 45, class: 'col-n' },
+            { letter: 'G', start: 46, end: 60, class: 'col-g' },
+            { letter: 'O', start: 61, end: 75, class: 'col-o' }
+        ];
+
+        // System Initialization
+        function initBoard() {
+            boardContainer.innerHTML = '';
+            columnsConfig.forEach(col => {
+                // Construct Column wrappers
+                const colDiv = document.createElement('div');
+                colDiv.className = `panel-column ${col.class}`;
+                
+                const header = document.createElement('div');
+                header.className = 'column-header';
+                header.innerText = col.letter;
+                colDiv.appendChild(header);
+
+                const subGrid = document.createElement('div');
+                subGrid.className = 'numbers-subgrid';
+
+                // Build out individual number balls
+                for (let i = col.start; i <= col.end; i++) {
+                    const ball = document.createElement('div');
+                    ball.className = 'ball';
+                    ball.innerText = i;
+                    ball.id = `ball-${i}`;
+                    ball.addEventListener('click', () => handleBallClick(i));
+                    subGrid.appendChild(ball);
+                }
+
+                colDiv.appendChild(subGrid);
+                boardContainer.appendChild(colDiv);
+            });
+            
+            // Check system cache configuration settings for local preferred theme preferences
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggleBtn.innerText = '☀️';
+            }
+        }
+
+        // Logic sequence determining activation or retraction states
+        function handleBallClick(num) {
+            const ballEl = document.getElementById(`ball-${num}`);
+            const index = calledSequence.indexOf(num);
+
+            if (index === -1) {
+                // Action: Ball Marked As Called
+                calledSequence.push(num);
+                ballEl.classList.add('called');
+            } else {
+                // Action: Ball Unmarked
+                calledSequence.splice(index, 1);
+                ballEl.classList.remove('called');
+            }
+
+            updateHighlights();
+        }
+
+        // Render pass detailing UI updating elements
+        function updateHighlights() {
+            // Drop current "last-called" designations system wide
+            document.querySelectorAll('.ball.last-called').forEach(el => {
+                el.classList.remove('last-called');
+            });
+
+            // Re-apply "last-called" parameters targeting tail index array configuration items exclusively
+            if (calledSequence.length > 0) {
+                const lastNum = calledSequence[calledSequence.length - 1];
+                const targetBall = document.getElementById(`ball-${lastNum}`);
+                if (targetBall) {
+                    targetBall.classList.add('last-called');
+                }
+            }
+
+            // Update Counter Array metric details UI string definitions values
+            counterDisplay.innerText = calledSequence.length;
+        }
+
+        // Entire Board Reset Logic Run commands
+        function clearBoard() {
+            if (calledSequence.length === 0) return;
+            
+            if (confirm('Are you sure you want to clear the entire bingo board?')) {
+                calledSequence = [];
+                document.querySelectorAll('.ball').forEach(el => {
+                    el.className = 'ball'; // Strips classes 'called' and 'last-called' completely
+                });
+                updateHighlights();
+            }
+        }
+
+        // Dark Theme / Light Theme system configuration switch handling
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.innerText = '☀️';
+            }
+        }
+
+        // Boot-Up
+        window.addEventListener('DOMContentLoaded', initBoard);
+    </script>
+</body>
+</html>
